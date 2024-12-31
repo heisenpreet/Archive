@@ -2,6 +2,26 @@ import React, { useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { DndProvider } from "react-dnd";
+import "@fontsource/roboto/300.css";
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
+import {
+  Box,
+  Button,
+  Card,
+  Grid,
+  Grid2,
+  List,
+  ListItem,
+  ListItemText,
+  ListSubheader,
+  Modal,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { blue } from "@mui/material/colors";
+import { Add } from "@mui/icons-material";
 
 const ItemTypes = {
   CATEGORY: "CATEGORY",
@@ -9,56 +29,56 @@ const ItemTypes = {
   PRODUCT: "PRODUCT",
 };
 
+const initialData = [
+  {
+    categoryName: "categoryName",
+    isSubCategory: true,
+    subcategory: [
+      {
+        name: "test",
+        products: [
+          { name: "card", id: "1" },
+          { name: "test2332", id: "2" },
+          { name: "test2332", id: "5" },
+          { name: "test23", id: "6" },
+          { name: "test1", id: "8" },
+        ],
+      },
+      {
+        categoryName: "test",
+        isSubCategory: false,
+        products: [
+          { name: "34334", id: "3" },
+          { name: "23ew", id: "4" },
+        ],
+      },
+    ],
+  },
+  {
+    categoryName: "categoryName2",
+    isSubCategory: true,
+    subcategory: [
+      {
+        name: "test2",
+        products: [
+          { name: "...", id: "1" },
+          { name: "2323", id: "2" },
+        ],
+      },
+      {
+        categoryName: "test22",
+        isSubCategory: false,
+        products: [
+          { name: "34334", id: "3" },
+          { name: "23ew", id: "4" },
+        ],
+      },
+    ],
+  },
+];
 const App = () => {
-  const initialData = [
-    {
-      categoryName: "categoryName",
-      isSubCategory: true,
-      subcategory: [
-        {
-          name: "test",
-          products: [
-            { name: "card", id: "1" },
-            { name: "test2332", id: "2" },
-            { name: "test2332", id: "5" },
-            { name: "test23", id: "6" },
-            { name: "test1", id: "8" },
-          ],
-        },
-        {
-          categoryName: "test",
-          isSubCategory: false,
-          products: [
-            { name: "34334", id: "3" },
-            { name: "23ew", id: "4" },
-          ],
-        },
-      ],
-    },
-    {
-      categoryName: "categoryName2",
-      isSubCategory: true,
-      subcategory: [
-        {
-          name: "test2",
-          products: [
-            { name: "...", id: "1" },
-            { name: "2323", id: "2" },
-          ],
-        },
-        {
-          categoryName: "test22",
-          isSubCategory: false,
-          products: [
-            { name: "34334", id: "3" },
-            { name: "23ew", id: "4" },
-          ],
-        },
-      ],
-    },
-  ];
-
   const [data, setData] = useState(initialData);
+  const [open, setOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newSubcategoryName, setNewSubcategoryName] = useState("");
 
@@ -128,6 +148,7 @@ const App = () => {
     };
     setData([...data, newCategory]);
     setNewCategoryName("");
+    setOpen(false)
   };
 
   const handleAddSubcategory = (categoryIndex, newSubcategoryName) => {
@@ -399,14 +420,126 @@ const App = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div>
-        <button onClick={handleAddCategory}>Add Category</button>
-        <input
-          type="text"
-          value={newCategoryName}
-          onChange={(e) => setNewCategoryName(e.target.value)}
-          placeholder="Enter category name"
-        />
+      <Grid2
+        container
+        padding={2}
+        bgcolor={blue[50]}
+        height={"97vh"}
+        width={"98vw"}
+        spacing={2}
+        overflow={"hidden"}
+      >
+        <Box bgcolor={"white"} borderRadius={"0.5rem"} padding={2}>
+          <Typography textAlign="center"> Products List</Typography>
+          <TextField fullWidth label="Search" size="small" margin="normal" />
+          <List
+            sx={{
+              width: "100%",
+              minWidth: 200,
+              bgcolor: "background.paper",
+              position: "relative",
+              overflow: "auto",
+              maxHeight: "75vh",
+              overflowY: "scroll",
+              "& ul": { padding: 0 },
+            }}
+            subheader={<li />}
+          >
+            {["fruits", "desk", "cars", "movies"].map((sectionId) => (
+              <li key={`section-${sectionId}`}>
+                <ul>
+                  <ListSubheader>{sectionId}</ListSubheader>
+                  {new Array(5).fill(sectionId).map((_, item) => (
+                    <ListItem key={`item-${sectionId}-${item}`}>
+                      <ListItemText primary={`${sectionId} item ${item}`} />
+                    </ListItem>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </List>
+        </Box>
+
+        <Grid2 width="75vw">
+          <Button
+            onClick={() => setOpen(true)}
+            variant="contained"
+            endIcon={<Add />}
+            sx={{ marginLeft: "83.5%", textWrap: "nowrap" }}
+          >
+            Add Category
+          </Button>
+          {/* //add category modal */}
+          <Modal
+            open={open}
+            onClose={() => setOpen(false)}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
+          >
+            <Box sx={style}>
+              <Typography>Add Category</Typography>
+              <form>
+                <TextField
+                  fullWidth
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  label="Enter category name"
+                  margin="normal"
+                />
+                <Button
+                  onClick={handleAddCategory}
+                  variant="contained"
+                  endIcon={<Add />}
+                >
+                  Submit
+                </Button>
+              </form>
+            </Box>
+          </Modal>
+
+          {data.map((category, index) => (
+            <details style={{ marginTop: "1rem" }} open="">
+              <summary>{category.categoryName}</summary>
+              <details style={{ marginLeft: "1rem" }}>
+                <summary>Sub-category 1</summary>
+                <ul>
+                  <li>
+                    <span>Products</span> 1
+                  </li>
+                  <li>
+                    <span>Products</span> 2
+                  </li>
+                  <li>
+                    <span>Products</span> 3
+                  </li>
+                  <li>
+                    <span>Products</span> 4
+                  </li>
+                </ul>
+              </details>
+              <details style={{ marginLeft: "1rem" }}>
+                <summary>Sub-category 2</summary>
+                <ul>
+                  <li>
+                    <span>Products</span> 1
+                  </li>
+                  <li>
+                    <span>Products</span> 2
+                  </li>
+                  <li>
+                    <span>Products</span> 3
+                  </li>
+                  <li>
+                    <span>Products</span> 4
+                  </li>
+                </ul>
+              </details>
+            </details>
+          ))}
+        </Grid2>
+      </Grid2>
+      {/* <div>
+        
         {data.map((category, index) => (
           <Category
             key={index}
@@ -415,9 +548,21 @@ const App = () => {
             moveItem={moveItem}
           />
         ))}
-      </div>
+      </div> */}
     </DndProvider>
   );
 };
 
 export default App;
+
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 400,
+  bgcolor: "background.paper",
+  border: "2px solid #000",
+  boxShadow: 24,
+  p: 4,
+};
