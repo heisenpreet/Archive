@@ -27,7 +27,30 @@ const ItemTypes = {
   CATEGORY: "CATEGORY",
   SUBCATEGORY: "SUBCATEGORY",
   PRODUCT: "PRODUCT",
+  PRODUCT_LIST_ITEM: "PRODUCT_LIST_ITEM",
 };
+const listProducts = [
+  { name: "apple", id: 1 },
+  { name: "table", id: 2 },
+  { name: "car", id: 3 },
+  { name: "book", id: 4 },
+  { name: "chair", id: 5 },
+  { name: "house", id: 6 },
+  { name: "dog", id: 7 },
+  { name: "computer", id: 8 },
+  { name: "phone", id: 9 },
+  { name: "tree", id: 10 },
+  { name: "bottle", id: 11 },
+  { name: "pen", id: 12 },
+  { name: "lamp", id: 13 },
+  { name: "door", id: 14 },
+  { name: "watch", id: 15 },
+  { name: "keyboard", id: 16 },
+  { name: "mouse", id: 17 },
+  { name: "sofa", id: 18 },
+  { name: "camera", id: 19 },
+  { name: "plant", id: 20 },
+];
 
 const initialData = [
   {
@@ -109,30 +132,56 @@ const App = () => {
         );
       }
     } else if (type === ItemTypes.PRODUCT) {
-      const categoryIndex = fromIndex[0];
-      const subcategoryIndex = fromIndex[1];
-      const productIndex = fromIndex[2];
+      if (fromIndex.length === 1) {
+        const product = listProducts.filter(
+          (item) => item.id === fromIndex[0]
+        )[0];
+        console.log(product);
+        if (toIndex[0] === "newCategory") {
+          updatedData[toIndex[1]].subcategory[toIndex[2]].products.push(
+            product
+          );
+        } else {
+          const targetCategoryIndex = toIndex[0];
+          const targetSubcategoryIndex = toIndex[1];
+          const targetProductIndex = toIndex[2];
 
-      const product =
-        updatedData[categoryIndex].subcategory[subcategoryIndex].products[
-          productIndex
-        ];
+          // updatedData[categoryIndex].subcategory[
+          //   subcategoryIndex
+          // ].products.splice(productIndex, 1);
 
-      if (toIndex[0] === "newCategory") {
-        updatedData[categoryIndex].subcategory[
-          subcategoryIndex
-        ].products.splice(productIndex, 1);
-        updatedData[toIndex[1]].subcategory[toIndex[2]].products.push(product);
+          updatedData[targetCategoryIndex].subcategory[
+            targetSubcategoryIndex
+          ].products.splice(targetProductIndex, 0, product);
+        }
       } else {
-        const targetCategoryIndex = toIndex[0];
-        const targetSubcategoryIndex = toIndex[1];
-        const targetProductIndex = toIndex[2];
-        updatedData[categoryIndex].subcategory[
-          subcategoryIndex
-        ].products.splice(productIndex, 1);
-        updatedData[targetCategoryIndex].subcategory[
-          targetSubcategoryIndex
-        ].products.splice(targetProductIndex, 0, product);
+        const categoryIndex = fromIndex[0];
+        const subcategoryIndex = fromIndex[1];
+        const productIndex = fromIndex[2];
+
+        const product =
+          updatedData[categoryIndex]?.subcategory[subcategoryIndex]?.products[
+            productIndex
+          ];
+
+        if (toIndex[0] === "newCategory") {
+          updatedData[categoryIndex].subcategory[
+            subcategoryIndex
+          ].products.splice(productIndex, 1);
+          updatedData[toIndex[1]].subcategory[toIndex[2]].products.push(
+            product
+          );
+        } else {
+          const targetCategoryIndex = toIndex[0];
+          const targetSubcategoryIndex = toIndex[1];
+          const targetProductIndex = toIndex[2];
+          updatedData[categoryIndex].subcategory[
+            subcategoryIndex
+          ].products.splice(productIndex, 1);
+          updatedData[targetCategoryIndex].subcategory[
+            targetSubcategoryIndex
+          ].products.splice(targetProductIndex, 0, product);
+        }
       }
     }
 
@@ -148,7 +197,7 @@ const App = () => {
     };
     setData([...data, newCategory]);
     setNewCategoryName("");
-    setOpen(false)
+    setOpen(false);
   };
 
   const handleAddSubcategory = (categoryIndex, newSubcategoryName) => {
@@ -164,6 +213,7 @@ const App = () => {
   };
 
   const Category = ({ category, index }) => {
+    const [open, setOpen] = useState(false);
     const subCatRef = useRef();
     const [{ isDragging }, drag] = useDrag({
       type: ItemTypes.CATEGORY,
@@ -190,7 +240,8 @@ const App = () => {
     }
 
     return (
-      <div
+      <details
+        open=""
         ref={(node) => drag(drop(node))}
         style={{
           padding: "10px",
@@ -203,26 +254,50 @@ const App = () => {
             : "lightgrey",
         }}
       >
-        <h2>{category.categoryName}</h2>
-        <button
-          onClick={() => {
-            handleAddSubcategory(index, subCatRef.current.value);
-          }}
-        >
-          Add Subcategory
-        </button>
-        <input
-          type="text"
-          // value={newSubcategoryName}
-          // onChange={(e) => {
-          //   e.stopPropagation();
-          //   setNewSubcategoryName(e.target.value);
-          // }}
-          ref={subCatRef}
-          placeholder="Enter subcategory name"
-        />
+        <summary>
+          {category.categoryName}{" "}
+          <Button
+            onClick={() => setOpen(true)}
+            variant="contained"
+            endIcon={<Add />}
+            size="small"
+            sx={{ marginLeft: "2rem", textWrap: "nowrap" }}
+          >
+            Add SubCategory
+          </Button>
+          {/* //add sub category modal */}
+          <Modal
+            open={open}
+            onClose={() => setOpen(false)}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
+          >
+            <Box sx={style}>
+              <Typography>Add Category</Typography>
+              <form>
+                <TextField
+                  fullWidth
+                  type="text"
+                  inputRef={subCatRef}
+                  label="Enter subcategory name"
+                  margin="normal"
+                />
+                <Button
+                  onClick={() => {
+                    handleAddSubcategory(index, subCatRef.current.value);
+                  }}
+                  variant="contained"
+                  endIcon={<Add />}
+                >
+                  Submit
+                </Button>
+              </form>
+            </Box>
+          </Modal>
+        </summary>
+
         <Subcategories category={category} index={index} moveItem={moveItem} />
-      </div>
+      </details>
     );
   };
 
@@ -258,11 +333,10 @@ const App = () => {
     }
 
     return (
-      <div
-        ref={(node) => drag(drop(node))}
+      <details
         style={{
           padding: "10px",
-          margin: "5px 0",
+          margin: "5px 1rem",
           border: "1px dashed black",
           backgroundColor: isDragging
             ? "lightblue"
@@ -270,15 +344,16 @@ const App = () => {
             ? "lightyellow"
             : "white",
         }}
+        ref={(node) => drag(drop(node))}
       >
-        <h3>{subcategory.name}</h3>
+        <summary>{subcategory.name}</summary>
         <Products
           categoryIndex={categoryIndex}
           subcategoryIndex={subcategoryIndex}
           products={subcategory.products}
           moveItem={moveItem}
         />
-      </div>
+      </details>
     );
   };
 
@@ -418,6 +493,42 @@ const App = () => {
     ));
   };
 
+  const ListProducts = ({ product }) => {
+    const [{ isDragging }, drag] = useDrag({
+      type: ItemTypes.PRODUCT,
+      item: { fromIndex: [product.id] },
+      collect: (monitor) => ({
+        isDragging: monitor.isDragging(),
+      }),
+    });
+
+    const [{ isOver }, drop] = useDrop({
+      accept: ItemTypes.PRODUCT,
+      drop: (item) => {},
+      collect: (monitor) => ({
+        isOver: monitor.isOver(),
+      }),
+    });
+
+    return (
+      <ListItem
+        style={{
+          padding: "5px",
+          margin: "5px 0",
+          border: "1px solid grey",
+          backgroundColor: isDragging
+            ? "lightcoral"
+            : isOver
+            ? "lightyellow"
+            : "lightgray",
+        }}
+        ref={(node) => drag(drop(node))}
+      >
+        <ListItemText primary={product.name} />
+      </ListItem>
+    );
+  };
+
   return (
     <DndProvider backend={HTML5Backend}>
       <Grid2
@@ -443,19 +554,9 @@ const App = () => {
               overflowY: "scroll",
               "& ul": { padding: 0 },
             }}
-            subheader={<li />}
           >
-            {["fruits", "desk", "cars", "movies"].map((sectionId) => (
-              <li key={`section-${sectionId}`}>
-                <ul>
-                  <ListSubheader>{sectionId}</ListSubheader>
-                  {new Array(5).fill(sectionId).map((_, item) => (
-                    <ListItem key={`item-${sectionId}-${item}`}>
-                      <ListItemText primary={`${sectionId} item ${item}`} />
-                    </ListItem>
-                  ))}
-                </ul>
-              </li>
+            {listProducts.map((product) => (
+              <ListProducts key={product.id} product={product} />
             ))}
           </List>
         </Box>
@@ -498,57 +599,15 @@ const App = () => {
           </Modal>
 
           {data.map((category, index) => (
-            <details style={{ marginTop: "1rem" }} open="">
-              <summary>{category.categoryName}</summary>
-              <details style={{ marginLeft: "1rem" }}>
-                <summary>Sub-category 1</summary>
-                <ul>
-                  <li>
-                    <span>Products</span> 1
-                  </li>
-                  <li>
-                    <span>Products</span> 2
-                  </li>
-                  <li>
-                    <span>Products</span> 3
-                  </li>
-                  <li>
-                    <span>Products</span> 4
-                  </li>
-                </ul>
-              </details>
-              <details style={{ marginLeft: "1rem" }}>
-                <summary>Sub-category 2</summary>
-                <ul>
-                  <li>
-                    <span>Products</span> 1
-                  </li>
-                  <li>
-                    <span>Products</span> 2
-                  </li>
-                  <li>
-                    <span>Products</span> 3
-                  </li>
-                  <li>
-                    <span>Products</span> 4
-                  </li>
-                </ul>
-              </details>
-            </details>
+            <Category
+              key={index}
+              category={category}
+              index={index}
+              moveItem={moveItem}
+            />
           ))}
         </Grid2>
       </Grid2>
-      {/* <div>
-        
-        {data.map((category, index) => (
-          <Category
-            key={index}
-            category={category}
-            index={index}
-            moveItem={moveItem}
-          />
-        ))}
-      </div> */}
     </DndProvider>
   );
 };
