@@ -9,13 +9,10 @@ import "@fontsource/roboto/700.css";
 import {
   Box,
   Button,
-  Card,
-  Grid,
   Grid2,
   List,
   ListItem,
   ListItemText,
-  ListSubheader,
   Modal,
   TextField,
   Typography,
@@ -29,7 +26,7 @@ const ItemTypes = {
   PRODUCT: "PRODUCT",
   PRODUCT_LIST_ITEM: "PRODUCT_LIST_ITEM",
 };
-const listProducts = [
+const listProductsInitial = [
   { name: "apple", id: 1 },
   { name: "table", id: 2 },
   { name: "car", id: 3 },
@@ -67,14 +64,6 @@ const initialData = [
           { name: "test1", id: "8" },
         ],
       },
-      {
-        categoryName: "test",
-        isSubCategory: false,
-        products: [
-          { name: "34334", id: "3" },
-          { name: "23ew", id: "4" },
-        ],
-      },
     ],
   },
   {
@@ -88,14 +77,6 @@ const initialData = [
           { name: "2323", id: "2" },
         ],
       },
-      {
-        categoryName: "test22",
-        isSubCategory: false,
-        products: [
-          { name: "34334", id: "3" },
-          { name: "23ew", id: "4" },
-        ],
-      },
     ],
   },
 ];
@@ -103,7 +84,7 @@ const App = () => {
   const [data, setData] = useState(initialData);
   const [open, setOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
-  const [newSubcategoryName, setNewSubcategoryName] = useState("");
+  const [listProducts, setlistProducts] = useState(listProductsInitial);
 
   const moveItem = (fromIndex, toIndex, type) => {
     let updatedData = [...data];
@@ -133,10 +114,11 @@ const App = () => {
       }
     } else if (type === ItemTypes.PRODUCT) {
       if (fromIndex.length === 1) {
-        const product = listProducts.filter(
+        const listProductsIndex = listProducts.findIndex(
           (item) => item.id === fromIndex[0]
-        )[0];
-        console.log(product);
+        );
+        const product = listProducts[listProductsIndex];
+
         if (toIndex[0] === "newCategory") {
           updatedData[toIndex[1]].subcategory[toIndex[2]].products.push(
             product
@@ -146,13 +128,16 @@ const App = () => {
           const targetSubcategoryIndex = toIndex[1];
           const targetProductIndex = toIndex[2];
 
-          // updatedData[categoryIndex].subcategory[
-          //   subcategoryIndex
-          // ].products.splice(productIndex, 1);
-
           updatedData[targetCategoryIndex].subcategory[
             targetSubcategoryIndex
           ].products.splice(targetProductIndex, 0, product);
+
+          setlistProducts((ps) => {
+            const temp = structuredClone(ps);
+            temp.splice(listProductsIndex, 1);
+
+            return temp;
+          });
         }
       } else {
         const categoryIndex = fromIndex[0];
@@ -197,7 +182,6 @@ const App = () => {
     };
     setData([...data, newCategory]);
     setNewCategoryName("");
-    setOpen(false);
   };
 
   const handleAddSubcategory = (categoryIndex, newSubcategoryName) => {
@@ -240,7 +224,7 @@ const App = () => {
     }
 
     return (
-      <details
+      <div
         open=""
         ref={(node) => drag(drop(node))}
         style={{
@@ -261,7 +245,7 @@ const App = () => {
             variant="contained"
             endIcon={<Add />}
             size="small"
-            sx={{ marginLeft: "2rem", textWrap: "nowrap" }}
+            sx={{ marginLeft: "80%", textWrap: "nowrap" }}
           >
             Add SubCategory
           </Button>
@@ -297,7 +281,7 @@ const App = () => {
         </summary>
 
         <Subcategories category={category} index={index} moveItem={moveItem} />
-      </details>
+      </div>
     );
   };
 
@@ -333,7 +317,7 @@ const App = () => {
     }
 
     return (
-      <details
+      <div
         style={{
           padding: "10px",
           margin: "5px 1rem",
@@ -353,11 +337,46 @@ const App = () => {
           products={subcategory.products}
           moveItem={moveItem}
         />
-      </details>
+      </div>
     );
   };
 
   const Subcategories = ({ category, index, moveItem }) => {
+    if (!category.subcategory.length) {
+      const [{ isDragging }, drag] = useDrag({
+        type: ItemTypes.SUBCATEGORY,
+        item: { fromIndex: [0] },
+        collect: (monitor) => ({
+          isDragging: monitor.isDragging(),
+        }),
+      });
+
+      const [{ isOver }, drop] = useDrop({
+        accept: ItemTypes.SUBCATEGORY,
+        drop: (item) =>
+          moveItem(item.fromIndex, [index, 0], ItemTypes.SUBCATEGORY),
+        collect: (monitor) => ({
+          isOver: monitor.isOver(),
+        }),
+      });
+      return (
+        <div
+          ref={(node) => drag(drop(node))}
+          style={{
+            padding: "5px",
+            margin: "5px 0",
+            border: "1px solid grey",
+            backgroundColor: isDragging
+              ? "lightcoral"
+              : isOver
+              ? "lightyellow"
+              : "lightgray",
+          }}
+        >
+          No sub category available
+        </div>
+      );
+    }
     return category.subcategory.map((subcategory, subcategoryIndex) => (
       <Subcategory
         key={subcategoryIndex}
@@ -504,7 +523,27 @@ const App = () => {
 
     const [{ isOver }, drop] = useDrop({
       accept: ItemTypes.PRODUCT,
-      drop: (item) => {},
+      drop: (item) => {
+        const { fromIndex } = item;
+        const [categoryIndex, subcategoryIndex, productIndex] = fromIndex;
+        const targetProduct =
+          data[categoryIndex].subcategory[subcategoryIndex].products[
+            productIndex
+          ];
+        setlistProducts((ps) => {
+          const temp = structuredClone(ps);
+          temp.unshift(targetProduct);
+          return temp;
+        });
+        setData((ps) => {
+          const temp = structuredClone(ps);
+          temp[categoryIndex].subcategory[subcategoryIndex].products.splice(
+            productIndex,
+            1
+          );
+          return temp;
+        });
+      },
       collect: (monitor) => ({
         isOver: monitor.isOver(),
       }),
